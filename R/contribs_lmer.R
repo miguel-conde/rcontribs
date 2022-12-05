@@ -226,9 +226,9 @@ calc_contribs_fe <- function(m_h_lm, base) {
 # }
 
 calc_contribs_re <- function(m_h_lm, base, groups = NULL) {
-
+  
   base <- base %>% mutate(contrib_idx = 1:nrow(base), .before = 1)
-
+  
   model_vars     <- get_model_vars(m_h_lm, type = "re")
   model_response <- get_model_response(m_h_lm)
   # model_groups   <- get_model_groups(m_h_lm)
@@ -238,10 +238,10 @@ calc_contribs_re <- function(m_h_lm, base, groups = NULL) {
     str_split((":")) %>%
     unlist() %>%
     unique()
-
+  
   contrib_f <-
     as.formula(paste(model_response, "~ ", paste(model_vars, collapse = "+")))
-
+  
   vars_in_base <- c(model_response,
                     model_groups_vars,
                     setdiff(model_vars %>%
@@ -249,30 +249,34 @@ calc_contribs_re <- function(m_h_lm, base, groups = NULL) {
                               unlist(),
                             "1"))
   base <- base %>% select(contrib_idx, all_of(vars_in_base)) %>% drop_na()
-
+  
   if (!is.null(groups)) model_groups <- intersect(model_groups, groups)
   contribs_g <- vector(mode = "list", length = length(model_groups))
   names(contribs_g) <- model_groups
-
+  
   for (g in model_groups) {
-
+    
     g_vars <- g %>% str_split((":")) %>% unlist() %>%  unique()
     g_elements <- base %>% select(all_of(g_vars)) %>% distinct() %>% arrange()
-
+    
     contribs_lst <- vector(mode = "list", length = nrow(g_elements))
     names(contribs_lst) <- g_elements %>% unite("group", everything()) %>% unlist()
-
+    
     for (idx_g_element in 1:nrow(g_elements)) {
-
-      g_element <- g_elements[idx_g_element,]
+      
+      g_element <- g_elements[idx_g_element, , drop = FALSE]
+      if (g_element == "susana_sexo") 
+      {
+        print(g_element)
+      }
       aux_base <- base %>% inner_join(g_element, by = names(g_element))
       m_matrix_g_element <- model.matrix(contrib_f, aux_base)
-      m_matrix_g_element <- m_matrix_g_element[, order(colnames(mm))]
-
+      m_matrix_g_element <- m_matrix_g_element[, order(colnames(m_matrix_g_element)), drop = FALSE]
+      
       coefs_g_element <- ranef(m_h_lm)[[g]][unlist(g_element) %>% paste(collapse=":"), colnames(m_matrix_g_element)]
       coefs_g_element <- coefs_g_element[, order(names(coefs_g_element))] %>%
         unlist()
-
+      
       contribs_lst[[idx_g_element]] <-
         aux_base %>% select(contrib_idx) %>%
         bind_cols(m_matrix_g_element %>% sweep(2, coefs_g_element, "*")) %>%
@@ -280,11 +284,11 @@ calc_contribs_re <- function(m_h_lm, base, groups = NULL) {
     }
     contribs_g[[g]] <- bind_rows(contribs_lst)
   }
-
+  
   contribs_g <- contribs_g %>% map(~ .x %>% arrange(contrib_idx))
-
+  
   return(contribs_g)
-
+  
 }
 
 #' Title
