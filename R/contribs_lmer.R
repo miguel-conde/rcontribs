@@ -335,8 +335,8 @@ sum_contribs <- function(c1, c2) {
 #' @examples
 calc_contribs <- function(m_h_lm, base, groups = NULL) {
 
-  contribs_fe <- calc_contribs_fe(m_h_lm, heights)
-  contribs_re <- calc_contribs_re(m_h_lm, heights, groups = groups)
+  contribs_fe <- calc_contribs_fe(m_h_lm, base)
+  contribs_re <- calc_contribs_re(m_h_lm, base, groups = groups)
 
   contribs <- contribs_fe
   for (i in seq_along(contribs_re)) {
