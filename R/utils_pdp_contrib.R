@@ -460,6 +460,25 @@ ggplot_rois <- function(in_contribs, in_data, tgt_vars = NULL, y_units = "", ...
 # OPTIM CONTRIB CURVES ----------------------------------------------------
 
 
+# Hill Function -----------------------------------------------------------
+
+hill_fun <- function(x, pars) {
+  K <- pars[[1]]
+  S <- pars[[2]]
+  X_0 <- pars[[3]]
+  Y_0 <- pars[[4]]
+
+  (x - X_0)^S / ((x - X_0)^S + K^S)
+}
+
+d_hill_fun <- function(x, pars) {
+  K <- pars[[1]]
+  S <- pars[[2]]
+  X_0 <- pars[[3]]
+  Y_0 <- pars[[4]]
+
+  Y_0 + S * K^S * hill_fun((x - X_0), pars) / (x - X_0) / ((x - X_0)^S + K^S)
+}
 
 # Sigmoid -----------------------------------------------------------------
 
